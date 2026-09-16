@@ -1742,11 +1742,13 @@
       justify-content: center;
     }
 
-    .extra-video-frame video {
+    .extra-video-frame video,
+    .extra-video-frame iframe {
       width: 100%;
       height: 100%;
       max-height: calc(90vh - 60px);
       object-fit: contain;
+      border: none;
       display: block;
     }
   </style>
@@ -2468,6 +2470,10 @@
           <source src="" type="video/mp4">
           브라우저가 비디오 재생을 지원하지 않습니다.
         </video>
+        <iframe id="extra-demo-iframe"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen
+          style="display: none; width: 100%; height: 100%; border: none;"></iframe>
       </div>
     </div>
   </div>
@@ -2624,6 +2630,11 @@
       if (extraVideo) {
         extraVideo.pause();
       }
+      const extraIframe = document.getElementById("extra-demo-iframe");
+      if (extraIframe) {
+        extraIframe.src = "";
+        extraIframe.style.display = "none";
+      }
     }
 
     function switchPage(pageNumber) {
@@ -2690,7 +2701,7 @@
         badgeClass: "purple",
         title: "HTML 기반의 LG 스타일 Slide Skill 만들기",
         prompt: "LG 전자 공식 디자인 가이드라인을 참고하여 완벽 준수하는 HTML 기반 발표 슬라이드 생성 Skill (lg-html-slide)을 만들어줘",
-        videoSrc: "demo_1.mov"
+        videoSrc: "https://www.youtube.com/watch?v=-h42R1XuKgs"
       },
       {
         id: 2,
@@ -2738,14 +2749,13 @@
       }
     ];
 
-    function openFeatureDemo(id) {
-      const demo = FEATURE_DEMOS.find(d => d.id === id);
+    function playModalMedia(demo) {
       if (!demo) return;
-
       const modal = document.getElementById("extra-video-modal");
       const modalBadge = document.getElementById("modal-demo-badge");
       const modalTitle = document.getElementById("modal-demo-title");
       const videoEl = document.getElementById("extra-demo-video");
+      const iframeEl = document.getElementById("extra-demo-iframe");
 
       if (modalBadge) {
         modalBadge.textContent = demo.badge;
@@ -2755,61 +2765,48 @@
         modalTitle.textContent = demo.title;
       }
 
-      if (videoEl) {
-        videoEl.pause();
-        videoEl.src = demo.videoSrc;
-        videoEl.currentTime = 0;
+      let ytMatch = demo.videoSrc.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+      if (ytMatch) {
+        if (videoEl) {
+          videoEl.pause();
+          videoEl.style.display = "none";
+        }
+        if (iframeEl) {
+          iframeEl.src = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&controls=1&enablejsapi=1&rel=0&playsinline=1`;
+          iframeEl.style.display = "block";
+        }
+      } else {
+        if (iframeEl) {
+          iframeEl.src = "";
+          iframeEl.style.display = "none";
+        }
+        if (videoEl) {
+          videoEl.style.display = "block";
+          videoEl.pause();
+          videoEl.src = demo.videoSrc;
+          videoEl.currentTime = 0;
+          const playPromise = videoEl.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(e => {
+              console.log("Auto play prevented:", e);
+            });
+          }
+        }
       }
 
       if (modal) {
         modal.classList.add("open");
       }
+    }
 
-      if (videoEl) {
-        const playPromise = videoEl.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            console.log("Auto play prevented:", e);
-          });
-        }
-      }
+    function openFeatureDemo(id) {
+      const demo = FEATURE_DEMOS.find(d => d.id === id);
+      if (demo) playModalMedia(demo);
     }
 
     function openExtraDemo(id) {
       const demo = EXTRA_DEMOS.find(d => d.id === id);
-      if (!demo) return;
-
-      const modal = document.getElementById("extra-video-modal");
-      const modalBadge = document.getElementById("modal-demo-badge");
-      const modalTitle = document.getElementById("modal-demo-title");
-      const videoEl = document.getElementById("extra-demo-video");
-
-      if (modalBadge) {
-        modalBadge.textContent = demo.badge;
-        modalBadge.className = `demo-pill-badge ${demo.badgeClass}`;
-      }
-      if (modalTitle) {
-        modalTitle.textContent = demo.title;
-      }
-
-      if (videoEl) {
-        videoEl.pause();
-        videoEl.src = demo.videoSrc;
-        videoEl.currentTime = 0;
-      }
-
-      if (modal) {
-        modal.classList.add("open");
-      }
-
-      if (videoEl) {
-        const playPromise = videoEl.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            console.log("Auto play prevented:", e);
-          });
-        }
-      }
+      if (demo) playModalMedia(demo);
     }
 
     function closeExtraDemoModal(event) {
@@ -2818,8 +2815,13 @@
       }
       const modal = document.getElementById("extra-video-modal");
       const videoEl = document.getElementById("extra-demo-video");
+      const iframeEl = document.getElementById("extra-demo-iframe");
       if (videoEl) {
         videoEl.pause();
+      }
+      if (iframeEl) {
+        iframeEl.src = "";
+        iframeEl.style.display = "none";
       }
       if (modal) {
         modal.classList.remove("open");
