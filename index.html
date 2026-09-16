@@ -2157,7 +2157,7 @@
 
             <video id="custom-demo-video" controls loop playsinline style="display: none;"></video>
             <iframe id="custom-demo-iframe"
-              src="https://www.youtube.com/embed/pA7Q5YgoLjc?enablejsapi=1&autoplay=1&controls=1&rel=0&playsinline=1&vq=hd720"
+              src="https://www.youtube.com/embed/y4nOG3-7EkE?enablejsapi=1&autoplay=1&controls=1&rel=0&playsinline=1&vq=hd1440"
               title="Antigravity Practical Demo Video"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerpolicy="strict-origin-when-cross-origin" allowfullscreen
@@ -2505,13 +2505,13 @@
         demoYtPlayerInstance = new YT.Player("custom-demo-iframe", {
           events: {
             onReady: function(event) {
-              event.target.setPlaybackQuality("hd720");
+              event.target.setPlaybackQuality("hd1440");
             },
             onStateChange: function(event) {
               if (event.data === 1) { // PLAYING
-                event.target.setPlaybackQuality("hd720");
+                event.target.setPlaybackQuality("hd1440");
                 if (event.target.setPlaybackQualityRange) {
-                  event.target.setPlaybackQualityRange("hd720", "hd720");
+                  event.target.setPlaybackQualityRange("hd1440", "hd1440");
                 }
               }
             }
@@ -2553,17 +2553,17 @@
       sendYTCommand("setPlaybackQualityRange", ["hd1080", "hd1080"]);
     }
 
-    function set720pQuality() {
+    function set1440pQuality() {
       if (demoYtPlayerInstance && demoYtPlayerInstance.setPlaybackQuality) {
         try {
-          demoYtPlayerInstance.setPlaybackQuality("hd720");
+          demoYtPlayerInstance.setPlaybackQuality("hd1440");
           if (demoYtPlayerInstance.setPlaybackQualityRange) {
-            demoYtPlayerInstance.setPlaybackQualityRange("hd720", "hd720");
+            demoYtPlayerInstance.setPlaybackQualityRange("hd1440", "hd1440");
           }
         } catch (e) {}
       }
-      sendDemoYTCommand("setPlaybackQuality", ["hd720"]);
-      sendDemoYTCommand("setPlaybackQualityRange", ["hd720", "hd720"]);
+      sendDemoYTCommand("setPlaybackQuality", ["hd1440"]);
+      sendDemoYTCommand("setPlaybackQualityRange", ["hd1440", "hd1440"]);
     }
 
     // Set 1080p on load and when playback starts
@@ -2574,12 +2574,12 @@
       });
     }
 
-    // Set 720p on load for demo video
+    // Set 1440p on load for demo video
     if (demoIframe) {
       demoIframe.addEventListener("load", () => {
-        setTimeout(set720pQuality, 600);
-        setTimeout(set720pQuality, 1500);
-        setTimeout(set720pQuality, 3000);
+        setTimeout(set1440pQuality, 600);
+        setTimeout(set1440pQuality, 1500);
+        setTimeout(set1440pQuality, 3000);
       });
     }
 
@@ -2588,7 +2588,7 @@
         const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
         if (data && (data.event === "onReady" || data.info?.playerState === 1)) {
           set1080pQuality();
-          set720pQuality();
+          set1440pQuality();
         }
         // Auto-loop seamlessly without requiring playlist parameter
         if (data && (data.info?.playerState === 0 || (data.event === "onStateChange" && data.data === 0))) {
@@ -3050,9 +3050,9 @@
           iframeElem.style.display = "block";
           if (videoElem) videoElem.style.display = "none";
           sendDemoYTCommand("playVideo");
-          set720pQuality();
-          setTimeout(set720pQuality, 600);
-          setTimeout(set720pQuality, 1500);
+          set1440pQuality();
+          setTimeout(set1440pQuality, 600);
+          setTimeout(set1440pQuality, 1500);
         } else if (videoElem && videoElem.style.display !== "none") {
           videoElem.currentTime = 0;
           videoElem.play().catch(() => { });
@@ -3210,7 +3210,7 @@
       if (urlInput) {
         let ytMatch = urlInput.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
         if (ytMatch) {
-          iframeElem.src = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&controls=1&enablejsapi=1&rel=0&playsinline=1&vq=hd720`;
+          iframeElem.src = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&controls=1&enablejsapi=1&rel=0&playsinline=1&vq=hd1440`;
           iframeElem.style.display = "block";
           videoElem.style.display = "none";
           if (placeholder) placeholder.style.display = "none";
