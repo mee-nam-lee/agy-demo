@@ -987,14 +987,14 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
-      display: block;
+      display: none;
     }
 
     .demo-screen-box iframe {
       width: 100%;
       height: 100%;
       border: none;
-      display: none;
+      display: block;
     }
 
     .placeholder-content {
@@ -2155,10 +2155,13 @@
               </button>
             </div>
 
-            <video id="custom-demo-video" src="AGY_NBLM_DEMO.mp4" controls loop playsinline></video>
+            <video id="custom-demo-video" controls loop playsinline style="display: none;"></video>
             <iframe id="custom-demo-iframe"
+              src="https://www.youtube.com/embed/pA7Q5YgoLjc?enablejsapi=1&autoplay=1&controls=1&rel=0&playsinline=1&vq=hd720"
+              title="Antigravity Practical Demo Video"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+              referrerpolicy="strict-origin-when-cross-origin" allowfullscreen
+              style="width: 100%; height: 100%; border: none; display: block;"></iframe>
           </div>
         </div>
 
@@ -2471,10 +2474,12 @@
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    /* 1. Intro YouTube Video Controller */
+    /* 1. Intro & Demo YouTube Video Controller */
     let isMuted = true;
     let ytPlayerInstance = null;
+    let demoYtPlayerInstance = null;
     const introIframe = document.getElementById("intro-video-iframe");
+    const demoIframe = document.getElementById("custom-demo-iframe");
 
     window.onYouTubeIframeAPIReady = function() {
       try {
@@ -2490,6 +2495,24 @@
               if (event.data === 0) { // ENDED
                 event.target.seekTo(0);
                 event.target.playVideo();
+              }
+            }
+          }
+        });
+      } catch (err) {}
+
+      try {
+        demoYtPlayerInstance = new YT.Player("custom-demo-iframe", {
+          events: {
+            onReady: function(event) {
+              event.target.setPlaybackQuality("hd720");
+            },
+            onStateChange: function(event) {
+              if (event.data === 1) { // PLAYING
+                event.target.setPlaybackQuality("hd720");
+                if (event.target.setPlaybackQualityRange) {
+                  event.target.setPlaybackQualityRange("hd720", "hd720");
+                }
               }
             }
           }
@@ -2511,12 +2534,36 @@
       }
     }
 
+    function sendDemoYTCommand(command, args = []) {
+      const iframe = document.getElementById("custom-demo-iframe");
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage(JSON.stringify({
+          event: "command",
+          func: command,
+          args: args
+        }), "*");
+      }
+    }
+
     function set1080pQuality() {
       if (ytPlayerInstance && ytPlayerInstance.setPlaybackQuality) {
         ytPlayerInstance.setPlaybackQuality("hd1080");
       }
       sendYTCommand("setPlaybackQuality", ["hd1080"]);
       sendYTCommand("setPlaybackQualityRange", ["hd1080", "hd1080"]);
+    }
+
+    function set720pQuality() {
+      if (demoYtPlayerInstance && demoYtPlayerInstance.setPlaybackQuality) {
+        try {
+          demoYtPlayerInstance.setPlaybackQuality("hd720");
+          if (demoYtPlayerInstance.setPlaybackQualityRange) {
+            demoYtPlayerInstance.setPlaybackQualityRange("hd720", "hd720");
+          }
+        } catch (e) {}
+      }
+      sendDemoYTCommand("setPlaybackQuality", ["hd720"]);
+      sendDemoYTCommand("setPlaybackQualityRange", ["hd720", "hd720"]);
     }
 
     // Set 1080p on load and when playback starts
@@ -2527,11 +2574,21 @@
       });
     }
 
+    // Set 720p on load for demo video
+    if (demoIframe) {
+      demoIframe.addEventListener("load", () => {
+        setTimeout(set720pQuality, 600);
+        setTimeout(set720pQuality, 1500);
+        setTimeout(set720pQuality, 3000);
+      });
+    }
+
     window.addEventListener("message", (event) => {
       try {
         const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
         if (data && (data.event === "onReady" || data.info?.playerState === 1)) {
           set1080pQuality();
+          set720pQuality();
         }
         // Auto-loop seamlessly without requiring playlist parameter
         if (data && (data.info?.playerState === 0 || (data.event === "onStateChange" && data.data === 0))) {
@@ -2595,6 +2652,7 @@
         pauseAllExtraVideos();
         const customDemoVideo = document.getElementById("custom-demo-video");
         if (customDemoVideo) customDemoVideo.pause();
+        sendDemoYTCommand("pauseVideo");
       } else if (pageNumber === 2) {
         sendYTCommand("pauseVideo");
         pauseAllExtraVideos();
@@ -2605,18 +2663,21 @@
         pauseAllExtraVideos();
         const customDemoVideo = document.getElementById("custom-demo-video");
         if (customDemoVideo) customDemoVideo.pause();
+        sendDemoYTCommand("pauseVideo");
       } else if (pageNumber === 4) {
         sendYTCommand("pauseVideo");
         stopArchAutoPlay();
         pauseAllExtraVideos();
         const customDemoVideo = document.getElementById("custom-demo-video");
         if (customDemoVideo) customDemoVideo.pause();
+        sendDemoYTCommand("pauseVideo");
       } else if (pageNumber === 5) {
         sendYTCommand("pauseVideo");
         stopArchAutoPlay();
         pauseAllExtraVideos();
         const customDemoVideo = document.getElementById("custom-demo-video");
         if (customDemoVideo) customDemoVideo.pause();
+        sendDemoYTCommand("pauseVideo");
         loadRandomQuiz();
       }
     }
@@ -2964,6 +3025,7 @@
       const btnArch = document.getElementById("btn-mode-arch");
       const btnVideo = document.getElementById("btn-mode-video");
       const videoElem = document.getElementById("custom-demo-video");
+      const iframeElem = document.getElementById("custom-demo-iframe");
 
       if (mode === 'arch') {
         archView.style.display = "flex";
@@ -2971,6 +3033,7 @@
         btnArch.classList.add("active");
         btnVideo.classList.remove("active");
         if (videoElem) videoElem.pause();
+        sendDemoYTCommand("pauseVideo");
         goToArchStep(currentArchStep);
         setTimeout(updateSvgWires, 50);
         if (archIsPlaying) startArchAutoPlay();
@@ -2980,10 +3043,17 @@
         btnArch.classList.remove("active");
         btnVideo.classList.add("active");
         stopArchAutoPlay();
-        if (videoElem) {
-          videoElem.style.display = "block";
-          const placeholder = document.getElementById("demo-placeholder");
-          if (placeholder) placeholder.style.display = "none";
+        const placeholder = document.getElementById("demo-placeholder");
+        if (placeholder) placeholder.style.display = "none";
+
+        if (iframeElem && (!videoElem || videoElem.style.display === "none")) {
+          iframeElem.style.display = "block";
+          if (videoElem) videoElem.style.display = "none";
+          sendDemoYTCommand("playVideo");
+          set720pQuality();
+          setTimeout(set720pQuality, 600);
+          setTimeout(set720pQuality, 1500);
+        } else if (videoElem && videoElem.style.display !== "none") {
           videoElem.currentTime = 0;
           videoElem.play().catch(() => { });
         }
@@ -3140,7 +3210,7 @@
       if (urlInput) {
         let ytMatch = urlInput.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
         if (ytMatch) {
-          iframeElem.src = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&controls=1&enablejsapi=1`;
+          iframeElem.src = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&controls=1&enablejsapi=1&rel=0&playsinline=1&vq=hd720`;
           iframeElem.style.display = "block";
           videoElem.style.display = "none";
           if (placeholder) placeholder.style.display = "none";
